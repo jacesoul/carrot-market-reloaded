@@ -1,21 +1,27 @@
+import Link from "next/link";
+
 export default function Home() {
   return (
-    <main className="bg-gray-200 sm:bg-red-100 md:bg-green-100 lg:bg-cyan-100 xl:bg-orange-100 2xl:bg-purple-100 h-screen flex items-center justify-center p-5 dark:bg-gray-700">
-      <div className="bg-white shadow-lg p-5 w-full rounded-3xl max-w-screen  flex flex-col gap-4">
-        <div className="group flex flex-col">
-          <input
-            // className="bg-gray-200 w-full"
-            type="text"
-          />
-          <input type="text" />
-          <span className="group-focus-within:block hidden">
-            Make sure it is a valid email...{" "}
-          </span>
-          <button className="w-full h-[100.178px] bg-[#352f50] rounded-[11.11px] text-[#3515c4]">
-            Submit
-          </button>
+    <div className="flex flex-col items-center justify-between min-h-screen p-6">
+      <div className="my-auto *:font-medium flex flex-col items-center gap-2">
+        <span className="text-9xl">🥕</span>
+        <h1 className="text-4xl">당근</h1>
+        <h2 className="text-2xl">당근 마켓에 어서오세요!</h2>
+      </div>
+      <div className="flex flex-col items-center gap-3 w-full">
+        <Link
+          href={"/create-account"}
+          className="w-full bg-orange-500 text-white text-lg font-medium py-2.5 rounded-md text-center hover:bg-orange-400 transition-colors"
+        >
+          시작하기
+        </Link>
+        <div className="flex gap-2">
+          <span>이미 계정이 있나요?</span>
+          <Link href={"/login"} className="hover:underline">
+            로그인
+          </Link>
         </div>
       </div>
-    </main>
+    </div>
   );
 }
