@@ -4,10 +4,10 @@ export default function Home() {
       <div className="bg-white shadow-lg p-5 w-full rounded-3xl max-w-screen  flex flex-col gap-4">
         <div className="group flex flex-col">
           <input
-            className="bg-gray-200 w-full"
+            // className="bg-gray-200 w-full"
             type="text"
-            placeholder="Write your email"
           />
+          <input type="text" />
           <span className="group-focus-within:block hidden">
             Make sure it is a valid email...{" "}
           </span>
