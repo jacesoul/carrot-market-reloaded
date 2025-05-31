@@ -5,8 +5,15 @@ import Input from "@/components/input";
 import { useActionState } from "react";
 import { smsLogIn } from "./actions";
 
+const initialState = {
+  token: false,
+  error: undefined,
+};
+
 export default function SMSLogIn() {
-  const [state, dispatch] = useActionState(smsLogIn, null);
+  const [state, dispatch] = useActionState(smsLogIn, initialState);
+
+  console.log(state, "current state");
 
   return (
     <div className="flex flex-col gap-10 py-8 px-6">
@@ -15,21 +22,28 @@ export default function SMSLogIn() {
         <h2 className="text-xl">Verify your phone number.</h2>
       </div>
       <form action={dispatch} className="flex flex-col gap-3">
-        <Input
-          name="phone"
-          type="text"
-          placeholder="Phone number"
-          required
-        ></Input>
-        <Input
-          name="token"
-          type="number"
-          placeholder="Verification code"
-          required
-          minLength={100000}
-          maxLength={999999}
-        ></Input>
-        <Button text="Verify"></Button>
+        {state.token ? (
+          <Input
+            name="token"
+            type="number"
+            placeholder="Verification code"
+            required
+            min={100000}
+            max={999999}
+            errors={state.error?.formErrors}
+          ></Input>
+        ) : (
+          <Input
+            name="phone"
+            type="text"
+            placeholder="Phone number"
+            required
+            errors={state.error?.formErrors}
+          ></Input>
+        )}
+        <Button
+          text={state.token ? "Verify Code" : "Send Verification SMS"}
+        ></Button>
       </form>
     </div>
   );

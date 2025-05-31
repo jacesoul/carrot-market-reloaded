@@ -8,7 +8,6 @@ interface FormButtonProps {
 
 export default function Button({ text }: FormButtonProps) {
   const { pending } = useFormStatus();
-  console.log(pending);
 
   return (
     <button
