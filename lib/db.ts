@@ -3,13 +3,16 @@ import { PrismaClient } from "@prisma/client";
 const prisma = new PrismaClient();
 
 async function test() {
-  const users = await prisma.user.findMany({
+  const token = await prisma.sMSToken.findUnique({
     where: {
-      username: "test",
+      id: 1,
+    },
+    include: {
+      user: true,
     },
   });
 
-  console.log(users);
+  console.log(token);
 }
 
 test();
