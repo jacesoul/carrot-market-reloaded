@@ -1,5 +1,6 @@
 "use server";
 
+import bcrypt from "bcrypt";
 import {
   PASSWORD_MIN_LENGTH,
   PASSWORD_REGEX,
@@ -80,5 +81,21 @@ export async function createAccount(prevState: any, formData: FormData) {
     return result.error.flatten();
   } else {
     const { username, email, password } = result.data;
+
+    const hashedPassword = await bcrypt.hash(password, 10);
+    console.log(hashedPassword);
+
+    const user = await prisma.user.create({
+      data: {
+        username,
+        email,
+        password: hashedPassword,
+      },
+      select: {
+        id: true,
+      },
+    });
+
+    console.log(user);
   }
 }
