@@ -1,5 +1,6 @@
 "use server";
 
+import { getIronSession } from "iron-session";
 import bcrypt from "bcrypt";
 import {
   PASSWORD_MIN_LENGTH,
@@ -8,6 +9,8 @@ import {
 } from "@/lib/constants";
 import prisma from "@/lib/db";
 import { z } from "zod";
+import { cookies } from "next/headers";
+import { redirect } from "next/navigation";
 
 const validatePassword = ({
   password,
@@ -68,6 +71,8 @@ const formSchema = z
   });
 
 export async function createAccount(prevState: any, formData: FormData) {
+  console.log(cookies());
+
   const data = {
     username: formData.get("username"),
     email: formData.get("email"),
@@ -96,6 +101,15 @@ export async function createAccount(prevState: any, formData: FormData) {
       },
     });
 
-    console.log(user);
+    const cookie = await getIronSession(await cookies(), {
+      cookieName: "session-karrot",
+      password: process.env.IRON_SESSION_PASSWORD!,
+    });
+
+    // @ts-ignore
+    cookie.id = user.id;
+    await cookie.save();
+
+    redirect("/profile");
   }
 }
