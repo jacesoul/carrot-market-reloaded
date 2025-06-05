@@ -1,6 +1,5 @@
 "use server";
 
-import { getIronSession } from "iron-session";
 import bcrypt from "bcrypt";
 import {
   PASSWORD_MIN_LENGTH,
@@ -21,29 +20,6 @@ const validatePassword = ({
   confirm_password: string;
 }) => password === confirm_password;
 
-const checkUniqueUsername = async (username: string) => {
-  const user = await prisma.user.findFirst({
-    where: {
-      username,
-    },
-    select: {
-      id: true,
-    },
-  });
-
-  return !Boolean(user);
-};
-
-const checkUniqueEmail = async (email: string) => {
-  const user = await prisma.user.findFirst({
-    where: {
-      email,
-    },
-  });
-
-  return !Boolean(user);
-};
-
 const formSchema = z
   .object({
     username: z
@@ -51,20 +27,52 @@ const formSchema = z
         invalid_type_error: "Username must be a string",
         required_error: "Username is required",
       })
-      .transform((username) => username.toLowerCase().trim())
-      .refine(checkUniqueUsername, {
-        message: "Username already in use",
-      }),
-    email: z
-      .string()
-      .email("Invalid email")
-      .toLowerCase()
-      .trim()
-      .refine(checkUniqueEmail, {
-        message: "Email already in use",
-      }),
+      .transform((username) => username.toLowerCase().trim()),
+    email: z.string().email("Invalid email").toLowerCase().trim(),
     password: z.string().regex(PASSWORD_REGEX, PASSWORD_VALIDATION_MESSAGE),
     confirm_password: z.string().min(PASSWORD_MIN_LENGTH),
+  })
+  .superRefine(async (data, ctx) => {
+    const user = await prisma.user.findUnique({
+      where: {
+        username: data.username,
+      },
+      select: {
+        id: true,
+      },
+    });
+
+    if (user) {
+      ctx.addIssue({
+        code: "custom",
+        message: "Username already in use",
+        path: ["username"],
+        fatal: true,
+      });
+
+      return z.NEVER;
+    }
+  })
+  .superRefine(async (data, ctx) => {
+    const user = await prisma.user.findUnique({
+      where: {
+        email: data.email,
+      },
+      select: {
+        id: true,
+      },
+    });
+
+    if (user) {
+      ctx.addIssue({
+        code: "custom",
+        message: "Email already in use",
+        path: ["email"],
+        fatal: true,
+      });
+
+      return z.NEVER;
+    }
   })
   .refine(validatePassword, {
     message: "Passwords do not match",
