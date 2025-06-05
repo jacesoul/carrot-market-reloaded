@@ -11,6 +11,7 @@ import prisma from "@/lib/db";
 import { z } from "zod";
 import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
+import getSession from "@/lib/session";
 
 const validatePassword = ({
   password,
@@ -101,14 +102,10 @@ export async function createAccount(prevState: any, formData: FormData) {
       },
     });
 
-    const cookie = await getIronSession(await cookies(), {
-      cookieName: "session-karrot",
-      password: process.env.IRON_SESSION_PASSWORD!,
-    });
+    const session = await getSession();
 
-    // @ts-ignore
-    cookie.id = user.id;
-    await cookie.save();
+    session.id = user.id;
+    await session.save();
 
     redirect("/profile");
   }
