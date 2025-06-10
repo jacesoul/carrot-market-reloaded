@@ -1,5 +1,7 @@
+import prisma from "@/lib/db";
+import getSession from "@/lib/session";
 import { notFound } from "next/navigation";
-import { NextRequest } from "next/server";
+import { NextRequest, NextResponse } from "next/server";
 
 export async function GET(request: NextRequest) {
   const code = request.nextUrl.searchParams.get("code");
@@ -23,11 +25,53 @@ export async function GET(request: NextRequest) {
       Accept: "application/json",
     },
   });
-  const data = await response.json();
+  const { access_token, error } = await response.json();
 
-  if ("error" in data) {
+  if (error) {
     return new Response(null, { status: 400 });
   }
 
-  return Response.json(data);
+  const userInfoURL = "https://api.github.com/user";
+  const userInfoResponse = await fetch(userInfoURL, {
+    headers: {
+      Authorization: `Bearer ${access_token}`,
+    },
+    cache: "no-cache",
+  });
+
+  const { id, avatar_url, login } = await userInfoResponse.json();
+
+  const user = await prisma.user.findUnique({
+    where: {
+      github_id: String(id),
+    },
+    select: {
+      id: true,
+    },
+  });
+
+  if (user) {
+    const session = await getSession();
+    session.id = user.id;
+    await session.save();
+
+    return NextResponse.redirect(new URL("/profile", request.url));
+  }
+
+  const newUser = await prisma.user.create({
+    data: {
+      username: `${login}_${id}`,
+      github_id: String(id),
+      avatar: avatar_url,
+    },
+    select: {
+      id: true,
+    },
+  });
+
+  const session = await getSession();
+  session.id = newUser.id;
+  await session.save();
+
+  return NextResponse.redirect(new URL("/profile", request.url));
 }
