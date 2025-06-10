@@ -1,19 +1,29 @@
 import { NextRequest, NextResponse } from "next/server";
+import getSession from "./lib/session";
+
+interface PublicOnlyUrls {
+  [key: string]: boolean;
+}
+
+const publicOnlyUrls: PublicOnlyUrls = {
+  "/": true,
+  "/login": true,
+  "/sms": true,
+  "/create-account": true,
+};
 
 export default async function middleware(request: NextRequest) {
-  console.log("Hello!!!");
-  const pathName = request.nextUrl.pathname;
-  if (pathName === "/") {
-    const response = NextResponse.next();
-    response.cookies.set("middleware-cookie", "hello");
+  const session = await getSession();
+  const exists = publicOnlyUrls[request.nextUrl.pathname];
 
-    return response;
-  }
-
-  //   const session = await getSession();
-  //   console.log(session);
-  if (request.nextUrl.pathname === "/profile") {
-    return Response.redirect(new URL("/login", request.url));
+  if (!session.id) {
+    if (!exists) {
+      return NextResponse.redirect(new URL("/", request.url));
+    }
+  } else {
+    if (exists) {
+      return NextResponse.redirect(new URL("/profile", request.url));
+    }
   }
 }
 

@@ -6,8 +6,6 @@ interface SessionContent {
 }
 
 export default async function getSession() {
-  console.log(cookies());
-
   return await getIronSession<SessionContent>(await cookies(), {
     cookieName: "session-karrot",
     password: process.env.IRON_SESSION_PASSWORD!,

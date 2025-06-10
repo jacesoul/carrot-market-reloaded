@@ -80,8 +80,6 @@ const formSchema = z
   });
 
 export async function createAccount(prevState: any, formData: FormData) {
-  console.log(cookies());
-
   const data = {
     username: formData.get("username"),
     email: formData.get("email"),
@@ -97,7 +95,6 @@ export async function createAccount(prevState: any, formData: FormData) {
     const { username, email, password } = result.data;
 
     const hashedPassword = await bcrypt.hash(password, 10);
-    console.log(hashedPassword);
 
     const user = await prisma.user.create({
       data: {
