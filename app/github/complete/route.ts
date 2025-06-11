@@ -1,14 +1,8 @@
 import prisma from "@/lib/db";
 import getSession from "@/lib/session";
-import { notFound } from "next/navigation";
 import { NextRequest, NextResponse } from "next/server";
 
-export async function GET(request: NextRequest) {
-  const code = request.nextUrl.searchParams.get("code");
-  if (!code) {
-    return notFound();
-  }
-
+async function getAccessToken(code: string): Promise<string | null> {
   const accessTokenURL = "https://github.com/login/oauth/access_token";
   const accessTokenParams = {
     client_id: process.env.GITHUB_CLIENT_ID!,
@@ -27,7 +21,19 @@ export async function GET(request: NextRequest) {
   });
   const { access_token, error } = await response.json();
 
-  if (error) {
+  if (error) return null;
+
+  return access_token;
+}
+
+export async function GET(request: NextRequest) {
+  const code = request.nextUrl.searchParams.get("code");
+  if (!code) {
+    return new Response(null, { status: 400 });
+  }
+
+  const access_token = await getAccessToken(code);
+  if (!access_token) {
     return new Response(null, { status: 400 });
   }
 
