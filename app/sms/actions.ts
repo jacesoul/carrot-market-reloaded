@@ -5,6 +5,7 @@ import validator from "validator";
 import { redirect } from "next/navigation";
 import prisma from "@/lib/db";
 import crypto from "crypto";
+import getSession from "@/lib/session";
 
 const phoneSchema = z
   .string()
@@ -14,16 +15,33 @@ const phoneSchema = z
     "Invalid phone number"
   );
 
-const tokenSchema = z.coerce.number().min(100000).max(999999);
+const tokenSchema = z.coerce
+  .number()
+  .min(100000)
+  .max(999999)
+  .refine((token) => checkToken(token.toString()), "Invalid token");
 
 interface ActionState {
   token: boolean;
 }
 
+async function checkToken(token: string) {
+  const existingToken = await prisma.sMSToken.findUnique({
+    where: {
+      token,
+    },
+    select: {
+      id: true,
+    },
+  });
+
+  return Boolean(existingToken);
+}
+
 async function createToken() {
   const token = crypto.randomInt(100000, 999999).toString();
 
-  const existingToken = await prisma.sMSToken.findFirst({
+  const existingToken = await prisma.sMSToken.findUnique({
     where: {
       token,
     },
@@ -81,7 +99,7 @@ export async function smsLogIn(prevState: ActionState, formData: FormData) {
       };
     }
   } else {
-    const result = tokenSchema.safeParse(token);
+    const result = await tokenSchema.safeParseAsync(token);
 
     if (!result.success) {
       return {
@@ -89,6 +107,25 @@ export async function smsLogIn(prevState: ActionState, formData: FormData) {
         error: result.error.flatten(),
       };
     } else {
+      const token = await prisma.sMSToken.findUnique({
+        where: {
+          token: result.data.toString(),
+        },
+        select: {
+          id: true,
+          userId: true,
+        },
+      });
+
+      const session = await getSession();
+      session.id = token!.userId;
+      await session.save();
+      await prisma.sMSToken.delete({
+        where: {
+          id: token!.id,
+        },
+      });
+
       redirect("/");
     }
   }
