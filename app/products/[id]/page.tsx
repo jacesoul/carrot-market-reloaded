@@ -55,29 +55,27 @@ export default async function ProductDetail({
       <div className="relative aspect-square">
         <Image fill src={product.photo} alt={product.title} />
       </div>
-      <div className="p-5">
-        <div className=" flex items-center gap-3 border-b border-neutral-700">
-          <div className="size-10 rounded-full">
-            {product.user.avatar !== null ? (
-              <Image
-                src={product.user.avatar}
-                width={40}
-                height={40}
-                alt={product.user.username}
-                className="rounded-full object-cover"
-              />
-            ) : (
-              <UserIcon />
-            )}
-          </div>
-          <div>
-            <h3>{product.user.username}</h3>
-          </div>
+      <div className=" flex items-center gap-3 border-b border-neutral-700 p-5">
+        <div className="size-10 rounded-full overflow-hidden">
+          {product.user.avatar !== null ? (
+            <Image
+              src={product.user.avatar}
+              width={40}
+              height={40}
+              alt={product.user.username}
+            />
+          ) : (
+            <UserIcon />
+          )}
         </div>
         <div>
-          <h1 className="text-2xl font-semibold">{product.title}</h1>
-          <p>{product.description}</p>
+          <h3>{product.user.username}</h3>
         </div>
+      </div>
+      <div className="p-5">
+        <h1 className="text-2xl font-semibold">{product.title}</h1>
+        <p>{product.description}</p>
+        <div className="p-80"></div>
       </div>
       <div className="fixed w-full bottom-0 left-0 p-5 pb-10 bg-neutral-800 flex justify-between items-center">
         <span className="font-semibold text-xl">
