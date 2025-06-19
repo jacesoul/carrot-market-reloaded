@@ -5,6 +5,7 @@ import { UserIcon } from "@heroicons/react/16/solid";
 import Image from "next/image";
 import Link from "next/link";
 import { notFound } from "next/navigation";
+import { deleteProduct } from "./actions";
 
 async function getIsOwner(userId: number) {
   const session = await getSession();
@@ -87,9 +88,15 @@ export default async function ProductDetail({
           {formatToWon(product.price)}원
         </span>
         {isOwner ? (
-          <button className="bg-red-500 px-5 py-2.5 rounded-md text-white font-semibold">
-            Delete Product
-          </button>
+          <form action={deleteProduct}>
+            <input type="hidden" name="id" value={product.id} />
+            <button
+              type="submit"
+              className="bg-red-500 px-5 py-2.5 rounded-md text-white font-semibold"
+            >
+              Delete Product
+            </button>
+          </form>
         ) : null}
         <Link
           className="bg-orange-500 px-5 py-2.5 rounded-md text-white font-semibold"
