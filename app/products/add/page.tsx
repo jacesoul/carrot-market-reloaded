@@ -3,13 +3,13 @@
 import Button from "@/components/button";
 import Input from "@/components/input";
 import { PhotoIcon } from "@heroicons/react/24/solid";
-import { useState } from "react";
+import { useActionState, useState } from "react";
 import { getUploadUrl, uploadProduct } from "./actions";
-import { useFormState } from "react-dom";
 
 export default function AddProduct() {
   const [preview, setPreview] = useState("");
   const [uploadUrl, setUploadUrl] = useState("");
+  const [imageId, setImageId] = useState("");
 
   const onImageChange = async (event: React.ChangeEvent<HTMLInputElement>) => {
     const {
@@ -31,10 +31,34 @@ export default function AddProduct() {
       const { id, uploadURL } = result;
 
       setUploadUrl(uploadURL);
+      setImageId(id);
     }
   };
 
-  const [state, action] = useFormState(uploadProduct, null);
+  const interceptAction = async (_any, formData: FormData) => {
+    // upload image to cloudflare
+    const cloudflareForm = new FormData();
+    cloudflareForm.append("file", formData.get("photo") as File);
+
+    const response = await fetch(uploadUrl, {
+      method: "POST",
+      body: cloudflareForm,
+    });
+
+    if (response.status !== 200) {
+      return;
+    }
+
+    const imageUrl = `https://imagedelivery.net/4RYcXHURsnuRcKMAkWaNMA/${imageId}`;
+
+    // replace photo in formData
+    formData.set("photo", imageUrl);
+
+    // call uploadProduct
+    return uploadProduct(null, formData);
+  };
+
+  const [state, action] = useActionState(interceptAction, null);
 
   return (
     <div>
