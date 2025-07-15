@@ -38,13 +38,15 @@ export default async function ProductDetail({
 }: {
   params: { id: string };
 }) {
-  const id = Number(params.id);
+  const { id } = await params;
 
-  if (isNaN(id)) {
+  const numId = Number(id);
+
+  if (isNaN(numId)) {
     return notFound();
   }
 
-  const product = await getProduct(id);
+  const product = await getProduct(numId);
   if (!product) {
     return notFound();
   }
