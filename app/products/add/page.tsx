@@ -3,13 +3,25 @@
 import Button from "@/components/button";
 import Input from "@/components/input";
 import { PhotoIcon } from "@heroicons/react/24/solid";
-import { useActionState, useState } from "react";
+import { useState } from "react";
 import { getUploadUrl, uploadProduct } from "./actions";
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { productSchema, ProductType } from "./schema";
 
 export default function AddProduct() {
   const [preview, setPreview] = useState("");
   const [uploadUrl, setUploadUrl] = useState("");
-  const [imageId, setImageId] = useState("");
+  const [file, setFile] = useState<File | null>(null);
+
+  const {
+    register,
+    handleSubmit,
+    setValue,
+    formState: { errors },
+  } = useForm<ProductType>({
+    resolver: zodResolver(productSchema),
+  });
 
   const onImageChange = async (event: React.ChangeEvent<HTMLInputElement>) => {
     const {
@@ -24,6 +36,7 @@ export default function AddProduct() {
     const url = URL.createObjectURL(file);
 
     setPreview(url);
+    setFile(file);
 
     const { success, result } = await getUploadUrl();
 
@@ -31,14 +44,21 @@ export default function AddProduct() {
       const { id, uploadURL } = result;
 
       setUploadUrl(uploadURL);
-      setImageId(id);
+      setValue(
+        "photo",
+        `https://imagedelivery.net/4RYcXHURsnuRcKMAkWaNMA/${id}`
+      );
     }
   };
 
-  const interceptAction = async (_any, formData: FormData) => {
+  const onSubmit = handleSubmit(async (data: ProductType) => {
+    if (!file) {
+      return;
+    }
+
     // upload image to cloudflare
     const cloudflareForm = new FormData();
-    cloudflareForm.append("file", formData.get("photo") as File);
+    cloudflareForm.append("file", file);
 
     const response = await fetch(uploadUrl, {
       method: "POST",
@@ -49,20 +69,24 @@ export default function AddProduct() {
       return;
     }
 
-    const imageUrl = `https://imagedelivery.net/4RYcXHURsnuRcKMAkWaNMA/${imageId}`;
+    const formData = new FormData();
 
-    // replace photo in formData
-    formData.set("photo", imageUrl);
+    formData.append("title", data.title);
+    formData.append("price", data.price + "");
+    formData.append("description", data.description);
+    formData.append("photo", data.photo);
 
     // call uploadProduct
-    return uploadProduct(null, formData);
-  };
+    return uploadProduct(formData);
+  });
 
-  const [state, action] = useActionState(interceptAction, null);
+  const onValid = async () => {
+    await onSubmit();
+  };
 
   return (
     <div>
-      <form action={action} className="p-5 flex flex-col gap-5">
+      <form action={onValid} className="p-5 flex flex-col gap-5">
         <label
           htmlFor="photo"
           className="border-2 aspect-square flex items-center justify-center flex-col text-neutral-300 border-neutral-300 rounded-md border-dashed cursor-pointer bg-center bg-cover"
@@ -75,7 +99,7 @@ export default function AddProduct() {
               <PhotoIcon className="w-20" />
               <div className="text-neutral-400 text-sm">
                 사진을 추가해주세요.
-                {state?.fieldErrors.photo}
+                {errors.photo?.message}
               </div>
             </>
           ) : null}
@@ -90,24 +114,24 @@ export default function AddProduct() {
         />
         <Input
           type="text"
-          name="title"
           required
           placeholder="제목"
-          errors={state?.fieldErrors.title}
+          errors={[errors.title?.message ?? ""]}
+          {...register("title")}
         />
         <Input
           type="number"
-          name="price"
           required
           placeholder="가격"
-          errors={state?.fieldErrors.price}
+          errors={[errors.price?.message ?? ""]}
+          {...register("price")}
         />
         <Input
           type="text"
-          name="description"
           required
           placeholder="자세한 설명"
-          errors={state?.fieldErrors.description}
+          errors={[errors.description?.message ?? ""]}
+          {...register("description")}
         />
         <Button text="작성 완료" />
       </form>
