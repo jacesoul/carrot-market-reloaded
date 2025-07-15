@@ -3,8 +3,8 @@ import "./globals.css";
 
 export const metadata: Metadata = {
   title: {
-    template: "%s | Karrot Market",
-    default: "Karrot Market",
+    template: "%s | Carrot Market",
+    default: "Carrot Market",
   },
   description: "Sell and buy all the things",
 };

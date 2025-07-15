@@ -102,7 +102,7 @@ export async function smsLogIn(prevState: ActionState, formData: FormData) {
       );
 
       await client.messages.create({
-        body: `Your Karrot verification code is : ${newToken}`,
+        body: `Your Carrot verification code is : ${newToken}`,
         from: process.env.TWILIO_PHONE_NUMBER,
         to: process.env.MY_PHONE_NUMBER!,
       });
