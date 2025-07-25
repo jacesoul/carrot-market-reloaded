@@ -16,8 +16,6 @@ export default function ProductList({ initialProducts }: ProductListProps) {
   const [isLastPage, setIsLastPage] = useState(false);
   const trigger = useRef<HTMLSpanElement>(null);
 
-  console.log(trigger);
-
   useEffect(() => {
     const observer = new IntersectionObserver(
       async (
