@@ -20,5 +20,5 @@ export async function deleteProduct(formData: FormData) {
   await prisma.product.delete({
     where: { id },
   });
-  redirect("/products");
+  redirect("/home");
 }
