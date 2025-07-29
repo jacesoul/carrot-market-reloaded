@@ -60,7 +60,7 @@ export default function ProductList({ initialProducts }: ProductListProps) {
       {products.map((product) => (
         <ListProduct key={product.id} {...product} />
       ))}
-      {isLastPage ? (
+      {/* {isLastPage ? (
         "No More New Products"
       ) : (
         <span
@@ -69,7 +69,7 @@ export default function ProductList({ initialProducts }: ProductListProps) {
         >
           {isLoading ? "Loading..." : "Load more"}
         </span>
-      )}
+      )} */}
     </div>
   );
 }
