@@ -6,6 +6,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { deleteProduct } from "./actions";
+import { revalidateTag, unstable_cache } from "next/cache";
 
 async function getIsOwner(userId: number) {
   const session = await getSession();
@@ -16,6 +17,7 @@ async function getIsOwner(userId: number) {
 }
 
 async function getProduct(id: number) {
+  console.log("product");
   const product = await prisma.product.findUnique({
     where: {
       id,
@@ -33,8 +35,34 @@ async function getProduct(id: number) {
   return product;
 }
 
+const getCashedProduct = unstable_cache(getProduct, ["product-detail"], {
+  tags: ["product-detail"],
+});
+
+async function getProductTitle(id: number) {
+  console.log("title");
+  const product = await prisma.product.findUnique({
+    where: {
+      id,
+    },
+    select: {
+      title: true,
+    },
+  });
+
+  return product;
+}
+
+const getCashedProductTitle = unstable_cache(
+  getProductTitle,
+  ["product-title"],
+  {
+    tags: ["product-title"],
+  }
+);
+
 export async function generateMetadata({ params }: { params: { id: string } }) {
-  const product = await getProduct(Number(params.id));
+  const product = await getCashedProductTitle(Number(params.id));
 
   return {
     title: product?.title,
@@ -54,12 +82,17 @@ export default async function ProductDetail({
     return notFound();
   }
 
-  const product = await getProduct(numId);
+  const product = await getCashedProduct(numId);
   if (!product) {
     return notFound();
   }
 
   const isOwner = await getIsOwner(product.userId);
+
+  const revalidate = async () => {
+    "use server";
+    revalidateTag("product-title");
+  };
 
   return (
     <div>
@@ -98,13 +131,13 @@ export default async function ProductDetail({
           {formatToWon(product.price)}원
         </span>
         {isOwner ? (
-          <form action={deleteProduct}>
-            <input type="hidden" name="id" value={product.id} />
+          <form action={revalidate}>
+            {/* <input type="hidden" name="id" value={product.id} /> */}
             <button
               type="submit"
               className="bg-red-500 px-5 py-2.5 rounded-md text-white font-semibold"
             >
-              Delete Product
+              Revalidate title chache
             </button>
           </form>
         ) : null}
