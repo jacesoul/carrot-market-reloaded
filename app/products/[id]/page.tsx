@@ -6,7 +6,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { deleteProduct } from "./actions";
-import { revalidateTag, unstable_cache } from "next/cache";
+import { unstable_cache } from "next/cache";
 
 async function getIsOwner(userId: number) {
   const session = await getSession();
@@ -18,28 +18,21 @@ async function getIsOwner(userId: number) {
 
 async function getProduct(id: number) {
   console.log("product");
-  // const product = await prisma.product.findUnique({
-  //   where: {
-  //     id,
-  //   },
-  //   include: {
-  //     user: {
-  //       select: {
-  //         username: true,
-  //         avatar: true,
-  //       },
-  //     },
-  //   },
-  // });
-
-  // return product;
-
-  fetch("https://api.com", {
-    next: {
-      revalidate: 60,
-      tags: ["hello"],
+  const product = await prisma.product.findUnique({
+    where: {
+      id,
+    },
+    include: {
+      user: {
+        select: {
+          username: true,
+          avatar: true,
+        },
+      },
     },
   });
+
+  return product;
 }
 
 const getCashedProduct = unstable_cache(getProduct, ["product-detail"], {
@@ -68,8 +61,13 @@ const getCashedProductTitle = unstable_cache(
   }
 );
 
-export async function generateMetadata({ params }: { params: { id: string } }) {
-  const product = await getCashedProductTitle(Number(params.id));
+export async function generateMetadata({
+  params,
+}: {
+  params: Promise<{ id: string }>;
+}) {
+  const { id } = await params;
+  const product = await getCashedProductTitle(Number(id));
 
   return {
     title: product?.title,
@@ -79,7 +77,7 @@ export async function generateMetadata({ params }: { params: { id: string } }) {
 export default async function ProductDetail({
   params,
 }: {
-  params: { id: string };
+  params: Promise<{ id: string }>;
 }) {
   const { id } = await params;
 
@@ -95,11 +93,6 @@ export default async function ProductDetail({
   }
 
   const isOwner = await getIsOwner(product.userId);
-
-  const revalidate = async () => {
-    "use server";
-    revalidateTag("product-title");
-  };
 
   return (
     <div>
@@ -138,8 +131,8 @@ export default async function ProductDetail({
           {formatToWon(product.price)}원
         </span>
         {isOwner ? (
-          <form action={revalidate}>
-            {/* <input type="hidden" name="id" value={product.id} /> */}
+          <form action={deleteProduct}>
+            <input type="hidden" name="id" value={product.id} />
             <button
               type="submit"
               className="bg-red-500 px-5 py-2.5 rounded-md text-white font-semibold"

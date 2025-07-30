@@ -4,7 +4,7 @@ import { PhotoIcon } from "@heroicons/react/16/solid";
 import { XMarkIcon } from "@heroicons/react/24/solid";
 import { useRouter } from "next/navigation";
 
-export default function Modal({ params }: { params: { id: string } }) {
+export default function Modal() {
   const router = useRouter();
   const onCloseClick = () => {
     router.back();

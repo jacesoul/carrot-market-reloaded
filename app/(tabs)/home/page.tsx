@@ -2,10 +2,10 @@ import ProductList from "@/components/product-list";
 import prisma from "@/lib/db";
 import { PlusIcon } from "@heroicons/react/24/solid";
 import { Prisma } from "@prisma/client";
-import { revalidatePath, unstable_cache } from "next/cache";
+import { revalidatePath } from "next/cache";
 import Link from "next/link";
 
-const getCachedProducts = unstable_cache(getInitialProducts, ["home-products"]);
+// const getCachedProducts = unstable_cache(getInitialProducts, ["home-products"]);
 
 async function getInitialProducts() {
   console.log("hit!!!!!");
@@ -33,8 +33,10 @@ export const metadata = {
   title: "Home",
 };
 
+export const revalidate = 60;
+
 export default async function Products() {
-  const initialProducts = await getCachedProducts();
+  const initialProducts = await getInitialProducts();
   const revalidate = async () => {
     "use server";
     revalidatePath("/home");
