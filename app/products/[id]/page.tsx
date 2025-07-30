@@ -18,21 +18,28 @@ async function getIsOwner(userId: number) {
 
 async function getProduct(id: number) {
   console.log("product");
-  const product = await prisma.product.findUnique({
-    where: {
-      id,
-    },
-    include: {
-      user: {
-        select: {
-          username: true,
-          avatar: true,
-        },
-      },
+  // const product = await prisma.product.findUnique({
+  //   where: {
+  //     id,
+  //   },
+  //   include: {
+  //     user: {
+  //       select: {
+  //         username: true,
+  //         avatar: true,
+  //       },
+  //     },
+  //   },
+  // });
+
+  // return product;
+
+  fetch("https://api.com", {
+    next: {
+      revalidate: 60,
+      tags: ["hello"],
     },
   });
-
-  return product;
 }
 
 const getCashedProduct = unstable_cache(getProduct, ["product-detail"], {
