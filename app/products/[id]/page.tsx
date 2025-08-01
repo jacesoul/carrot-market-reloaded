@@ -1,5 +1,4 @@
 import prisma from "@/lib/db";
-import getSession from "@/lib/session";
 import { formatToWon } from "@/lib/utils";
 import { UserIcon } from "@heroicons/react/16/solid";
 import Image from "next/image";
@@ -8,11 +7,11 @@ import { notFound } from "next/navigation";
 import { deleteProduct } from "./actions";
 import { unstable_cache } from "next/cache";
 
-async function getIsOwner(userId: number) {
-  const session = await getSession();
-  if (session.id) {
-    return session.id === userId;
-  }
+async function getIsOwner() {
+  // const session = await getSession();
+  // if (session.id) {
+  //   return session.id === userId;
+  // }
   return false;
 }
 
@@ -92,7 +91,7 @@ export default async function ProductDetail({
     return notFound();
   }
 
-  const isOwner = await getIsOwner(product.userId);
+  const isOwner = await getIsOwner();
 
   return (
     <div>
@@ -150,4 +149,14 @@ export default async function ProductDetail({
       </div>
     </div>
   );
+}
+
+export async function generateStaticParams() {
+  const products = await prisma.product.findMany({
+    select: {
+      id: true,
+    },
+  });
+
+  return products.map((product) => ({ id: product.id.toString() }));
 }
