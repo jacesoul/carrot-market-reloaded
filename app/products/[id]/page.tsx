@@ -16,7 +16,6 @@ async function getIsOwner() {
 }
 
 async function getProduct(id: number) {
-  console.log("product");
   const product = await prisma.product.findUnique({
     where: {
       id,
@@ -39,7 +38,6 @@ const getCashedProduct = unstable_cache(getProduct, ["product-detail"], {
 });
 
 async function getProductTitle(id: number) {
-  console.log("title");
   const product = await prisma.product.findUnique({
     where: {
       id,
