@@ -2,10 +2,10 @@ import prisma from "@/lib/db";
 import { notFound } from "next/navigation";
 import Image from "next/image";
 import { formatToTimeAgo } from "@/lib/utils";
-import { EyeIcon, HandThumbUpIcon } from "@heroicons/react/24/solid";
-import { HandThumbUpIcon as OutlineHandThumbUpIcon } from "@heroicons/react/24/outline";
+import { EyeIcon } from "@heroicons/react/24/solid";
 import getSession from "@/lib/session";
-import { revalidateTag, unstable_cache } from "next/cache";
+import { unstable_cache } from "next/cache";
+import LikeButton from "@/components/like-button";
 
 async function getPost(id: number) {
   try {
@@ -52,8 +52,8 @@ async function getLikeStatus(postId: number, userId: number) {
   const isLiked = await prisma.like.findUnique({
     where: {
       id: {
-        postId,
         userId,
+        postId,
       },
     },
   });
@@ -84,9 +84,10 @@ async function getCachedLikeStatus(postId: number) {
 export default async function PostDetail({
   params,
 }: {
-  params: { id: string };
+  params: Promise<{ id: string }>;
 }) {
-  const id = Number(params.id);
+  const { id: idParam } = await params;
+  const id = Number(idParam);
   if (isNaN(id)) {
     return notFound();
   }
@@ -96,48 +97,6 @@ export default async function PostDetail({
   if (!post) {
     return notFound();
   }
-
-  const likePost = async () => {
-    "use server";
-
-    await new Promise((r) => setTimeout(r, 5000));
-
-    try {
-      const session = await getSession();
-
-      await prisma.like.create({
-        data: {
-          postId: id,
-          userId: session.id!,
-        },
-      });
-
-      revalidateTag(`like-status-${id}`);
-    } catch (e) {
-      console.log(e);
-    }
-  };
-
-  const dislikePost = async () => {
-    "use server";
-
-    try {
-      const session = await getSession();
-
-      await prisma.like.delete({
-        where: {
-          id: {
-            postId: id,
-            userId: session.id!,
-          },
-        },
-      });
-
-      revalidateTag(`like-status-${id}`);
-    } catch (e) {
-      console.log(e);
-    }
-  };
 
   const { likeCount, isLiked } = await getCachedLikeStatus(id);
 
@@ -165,26 +124,7 @@ export default async function PostDetail({
           <EyeIcon className="size-5" />
           <span>조회 {post.views}</span>
         </div>
-        <form action={isLiked ? dislikePost : likePost}>
-          <button
-            className={`flex items-center gap-2 text-neutral-400 text-sm border border-neutral-400 rounded-full p-2 transition-colors ${
-              isLiked
-                ? "bg-orange-500 text-white border-orange-500"
-                : "hover:bg-neutral-800"
-            }`}
-          >
-            {isLiked ? (
-              <HandThumbUpIcon className="size-5" />
-            ) : (
-              <OutlineHandThumbUpIcon className="size-5" />
-            )}
-            {isLiked ? (
-              <span>{likeCount}</span>
-            ) : (
-              <span>공감하기 ({likeCount})</span>
-            )}
-          </button>
-        </form>
+        <LikeButton isLiked={isLiked} likeCount={likeCount} postId={id} />
       </div>
     </div>
   );
