@@ -12,6 +12,7 @@
     "@heroicons/react": "^2.2.0",
     "@hookform/resolvers": "^5.1.1",
     "@prisma/client": "^6.8.2",
+    "@supabase/supabase-js": "^2.55.0",
     "@types/bcrypt": "^5.0.2",
     "bcrypt": "^6.0.0",
     "iron-session": "^8.0.4",
